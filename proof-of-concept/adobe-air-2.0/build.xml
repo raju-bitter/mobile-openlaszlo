@@ -62,8 +62,18 @@
 
 
   <!--================  Target [init] ==============-->
-  <target name="init" >
+  <target name="init" depends="checkForLZXFile,checkForTargetFolder">
     <fail message="LPS_HOME not set" unless="env.LPS_HOME"/>
+    <fail message="Target LZX file for compilation not set in build.properties" unless="target.file"/>
+    <fail message="Target folder for generated ActionScript 3 source code not set in build.properties" unless="adobe.air.srcfolder"/>
+  </target>
+
+  <target name="checkForLZXFile" depends="lzx.file.check" if="lzx.file.missing">
+	<fail message="The LZX file &lt;${target.file}&gt; could not be found!" />
+  </target>
+
+  <target name="checkForTargetFolder" depends="target.folder.check" if="target.folder.missing">
+	<fail message="Folder ${adobe.air.srcfolder} doesn't exist, please create first!" />
   </target>
 
   <!--================  Target [generate-as3] ==============-->
@@ -71,7 +81,7 @@
       description="Generate AS3 code for Adobe AIR app"
       depends="init" >
     <echo message="Generating AS3 source code" />
-    <antcall target="solo-compile-file">
+    <antcall target="compile-lzx-file">
       <param name="file" value="${target.file}" />
       <param name="args" value=" --lzxonly --runtime=swf10" />
     </antcall>
@@ -89,8 +99,8 @@
     <echo message="tempPathToAS3Files: ${tempPathToAS3Files}" />
   </target>
 
-  <!-- solo-compile-all-file: compiles ${file}, using options {args} -->
-  <target name="solo-compile-file" description="Compile the file handed to this target by solo-compile-all-files">
+  <!-- solo-compile-all-file: compiles ${file}, using options ${args} -->
+  <target name="compile-lzx-file" description="Compiling LZX to ActionScript 3 source code">
     <echo message="Compiling ${file}"/>
     <echo message="arg: ${args} ${file}"/>
     <echo message="Using LPS_HOME: ${LPS_HOME}"/>
@@ -136,6 +146,24 @@
   <target name="all" 
       description="Clean, build, generate-as3, copy-to-air-src-folder"
       depends="clean, generate-as3, copy-to-air-src-folder">
+  </target>
+
+  <!--================  Helper targets  =================-->
+  <!-- Check if the LZX file in ${target.file} exists --> 
+  <target name="lzx.file.check">
+    <condition property="lzx.file.missing">
+	  <not>
+        <available file="${target.file}" type="file"/>
+      </not>
+    </condition>
+  </target>
+  <!-- Check if target folder for the generated source code exist. --> 
+  <target name="target.folder.check">
+    <condition property="target.folder.missing">
+	  <not>
+        <available file="${adobe.air.srcfolder}" type="dir"/>
+      </not>
+    </condition>
   </target>
 
 </project>
