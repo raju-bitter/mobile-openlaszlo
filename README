@@ -1,0 +1,8 @@
+Mobile OpenLaszlo
+The Mobile OpenLaszlo project contains a number of tools and extensions for OpenLaszlo (http://www.openlaszlo.org), one of the leading open source frameworks for creating HTML5 and SWF9/10 rich Internet applications. Mobile OpenLaszlo will enable OpenLaszlo developers to deploy OpenLaszlo applications as native apps on devices supported by the PhoneGap framework, devices supported by Adobe AIR 2.0 and the mobile version of Flash Player 10.1.
+
+A high level overview of the framework/toolset approach can be found at http://wiki.github.com/raju-bitter/mobile-openlaszlo/. A first release of the complete toolset can be expected for November 2010. Pre-releases will be available in early July 2010 (Adobe AIR 2.0 deployment scripts, modified LFC classes for Adobe AIR, OpenLaszlo app running inside PhoneGap on Android 2.1+ phones). Check the Mobile OpenLaszlo Roadmap page in the Wiki for up-to-date information:
+http://wiki.github.com/raju-bitter/mobile-openlaszlo/roadmap
+
+
+Mobile OpenLaszlo has been launched Raju Bitter in June 2010, and is released under the MIT license (http://www.opensource.org/licenses/mit-license.php).
