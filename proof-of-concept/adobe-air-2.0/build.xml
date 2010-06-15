@@ -1,0 +1,141 @@
+<project name="openlaszloAirTool" default="all" basedir=".">
+<!-- Copyright: Mobile OpenLaszlo
+     http://github.com/raju-bitter/mobile-openlaszlo
+     MIT license http://www.opensource.org/licenses/mit-license.php
+     Use is subject to license terms. 
+
+     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+     THE SOFTWARE.
+
+   IMPORTANT:
+   Please set the following vars in your custom build.properties file.
+        
+       target.file=your_file_name_without_path.lzx
+       
+       adobe.air.srcfolder=/air_project_folder/src
+
+       adobe.flex.home=/path/to/your/adobe/flex/sdk/
+
+  The environment variable $LPS_HOME must point to a folder containing an
+  installation of OpenLaszlo 5.0+ (or OpenLaszlo TRUNK).
+  
+-->
+
+  <description>
+  This is the build file for OpenLaszlo ActionScript3/SWF9+ applications running inside an Adobe AIR container.
+  </description>
+
+  <!-- Ignore the system classpath -->
+  <property name="build.sysclasspath" value="ignore" />
+
+  <property environment="env"/>
+
+  <!-- OpenLaszlo properties -->
+  <property name="LPS_HOME" value="${env.LPS_HOME}"/>
+  <property file="${LPS_HOME}/build.properties"/>
+  <property file="${basedir}/build.properties"/>
+
+  <!-- Temp folder where the "lzxonly" compile step writes the 
+      generate AS3 classes to. If the target LZX file is in a 
+      subfolder relative to $LPS_HOME, the folder path is added
+      to the temp build path -->
+  <property name="tempPathToAS3Files" value="temp/lzswf9/build"/>
+  <!-- Length of basedir and LPS_HOME, used to retrieve subfolder value
+       for path to AS3 source code -->
+
+  <!-- Flex Ant task -->
+  <taskdef resource="flexTasks.tasks" classpath="${adobe.flex.home}/flexTasks/lib/flexTasks.jar" />
+
+
+  <!-- CLASSPATH for Laszlo compiler lzc -->
+  <path id="laszlo.compiler.classpath">
+    <pathelement location="${LPS_HOME}/WEB-INF/lps/server/build"/>
+    <pathelement location="${LPS_HOME}/WEB-INF/classes"/>
+    <pathelement location="${servlet.jar}"/>
+    <fileset dir="${LPS_HOME}/WEB-INF/lib" includes="**/*.jar"/>
+  </path>
+
+
+  <!--================  Target [init] ==============-->
+  <target name="init" >
+    <fail message="LPS_HOME not set" unless="env.LPS_HOME"/>
+  </target>
+
+  <!--================  Target [generate-as3] ==============-->
+  <target name="generate-as3" 
+      description="Generate AS3 code for Adobe AIR app"
+      depends="init" >
+    <echo message="Generating AS3 source code" />
+    <antcall target="solo-compile-file">
+      <param name="file" value="${target.file}" />
+      <param name="args" value=" --lzxonly --runtime=swf10" />
+    </antcall>
+    <!-- The folder for the generated source files is
+         ${basedir}/${tempPathToAS3Files}/LZX_FILE_NAME_WITHOUT_LZX_ENDING/
+    -->
+    <script language="javascript">
+    var targetFile = openlaszloAirTool.getProperty("target.file");
+    var tempPath = openlaszloAirTool.getProperty("tempPathToAS3Files");
+    openlaszloAirTool.setProperty("tempPathToAS3Files", openlaszloAirTool.getProperty("basedir") + 
+                 "/" + tempPath + "/" +
+                 targetFile.substring(0, targetFile.length()-4));
+    </script>
+    <!-- Copy generated AS3 source files to AIR application -->
+    <echo message="tempPathToAS3Files: ${tempPathToAS3Files}" />
+  </target>
+
+  <!-- solo-compile-all-file: compiles ${file}, using options {args} -->
+  <target name="solo-compile-file" description="Compile the file handed to this target by solo-compile-all-files">
+    <echo message="Compiling ${file}"/>
+    <echo message="arg: ${args} ${file}"/>
+    <echo message="Using LPS_HOME: ${LPS_HOME}"/>
+    <java classpathref="laszlo.compiler.classpath" classname="org.openlaszlo.compiler.Main" fork="yes">
+      <!-- Don't use the default Java temp dir. The generated ActionScript3 files
+           will be located in the Java temp folder -->
+      <sysproperty key="java.io.tmpdir" value="./temp" />
+      <jvmarg value="-Xmx1024M"/>
+      <jvmarg value="-DLPS_HOME=${LPS_HOME}"/>
+      <arg line="${args} ${file}"/>
+    </java>
+  </target>
+
+  <target name="copy-to-air-src-folder" depends="generate-as3">
+    <echo message="Copying files from ${tempPathToAS3Files} to ${adobe.air.srcfolder}" />
+    <copy todir="${adobe.air.srcfolder}">
+      <fileset dir="${tempPathToAS3Files}" casesensitive="no">
+        <include name="**/*.as" />
+        <exclude name="**/LzSpriteApplication.as" />
+        <!-- Include image, video, XML dataset and other resource files.
+             Add other file extensions here for your own project -->
+        <include name="**/*.jpg" />
+        <include name="**/*.png" />
+        <include name="**/*.xml" />
+        <include name="**/*.flv" />
+        <include name="**/*.swf" />
+        <include name="**/*.ttf" />
+      </fileset>
+    </copy>
+  </target>
+
+  <!--================  Target [clean] ==============-->
+  <target name="clean"  >
+    <delete>
+      <fileset dir="." defaultexcludes="no" >
+        <include name="temp/*~"/>
+        <include name="build/**" />
+      </fileset>
+    </delete>
+  </target>
+
+  <!--================  Target [all]  ===================-->
+  <target name="all" 
+      description="Clean, build, generate-as3, copy-to-air-src-folder"
+      depends="clean, generate-as3, copy-to-air-src-folder">
+  </target>
+
+</project>
