@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+        <title>OpenLaszlo Application</title>
+<html>
+  <head>
+    <meta name="viewport" content="width=320; user-scalable=no" />
+	<!-- OL viewport def -->
+    <!-- meta name="viewport" content="width=device-width; initial-scale=1.0;"-->
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<!-- TODO: function? -->
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>PhoneGap</title>
+	<!-- OL -->
+    <script type="text/javascript" src="lps/includes/embed-compressed.js">
+    </script>
+    <script type="text/javascript">
+        lz.embed.lfc('lps/includes/lfc/LFCdhtml.js', 'lps/resources/');
+    </script>
+    <style type="text/css">
+        html, body {
+            /* http://www.quirksmode.org/css/100percheight.html */
+            height: 100%;
+            /* prevent browser decorations */
+            margin: 0;
+            padding: 0;
+            border: 0 none;
+        }
+        
+        body {
+            background-color: #ffffff;
+        }
+        
+        img {
+            border: 0 none;
+        }
+    </style>
+
+	<!-- PhoneGap -->	
+
+	<script type="text/javascript" charset="utf-8" src="phonegap.js"></script>	  
+	<script type="text/javascript" charset="utf-8">
+    var deviceInfo = function(){
+	  var deviceInfo = {};
+      deviceInfo['platform'] = device.platform;
+      deviceInfo['version'] = sdevice.version;
+      deviceInfo['uuid'] = device.uuid;
+      console.log("Height:" + window.innerHeight);
+	  console.log("Width:" + window.innerWidth);
+    }
+    
+	function init(){
+		document.addEventListener("touchmove", preventBehavior, false);
+		document.addEventListener("deviceready", deviceInfo, true);		
+	}
+  </script>
+  </head>
+  <body onload="init();" id="stage">
+        <div id="lzsplash" style="z-index: 10000000; top: 0; left: 0; width: 100%; height: 100%; position: fixed; display: table">
+            <p style="display: table-cell; vertical-align: middle;">
+                <img src="lps/includes/spinner.gif" style="display: block; margin: 20% auto" alt="application initializing">
+            </p>
+        </div>
+        <script type="text/javascript">
+            lz.embed.dhtml({
+                url: 'openlaszloapp.lzx.js',
+                bgcolor: '#ffffff',
+                width: '100%',
+                height: '100%',
+                id: 'lzapp',
+                accessible: 'false',
+                cancelmousewheel: false,
+                cancelkeyboardcontrol: false,
+                skipchromeinstall: false,
+                usemastersprite: false,
+                approot: ''
+            });
+            lz.embed.lzapp.onload = function loaded(){
+                var s = document.getElementById('lzsplash');
+                if (s) 
+                    LzSprite.prototype.__discardElement(s);
+            }
+        </script>
+        <noscript>
+            Please enable JavaScript in order to use this application.
+        </noscript>
+  </body>
+</html>
