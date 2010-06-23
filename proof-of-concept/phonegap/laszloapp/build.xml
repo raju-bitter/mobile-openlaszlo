@@ -1,0 +1,163 @@
+<project name="openlaszloPhoneGapCompiler" default="all" basedir=".">
+<!-- Copyright: Mobile OpenLaszlo, Raju Bitter
+     http://github.com/raju-bitter/mobile-openlaszlo
+     MIT license http://www.opensource.org/licenses/mit-license.php
+     Use is subject to license terms. 
+
+     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+     THE SOFTWARE.
+
+   IMPORTANT:
+   Please set the following vars in your custom build.properties file.
+        
+       target.file=your_file_name_without_path.lzx
+       
+       phonegap.www.folder=target_folder_for_compiled_LZX_file_and_resources
+
+  The environment variable $LPS_HOME must point to a folder containing an
+  installation of OpenLaszlo 4.7.3+ (or OpenLaszlo TRUNK).
+  
+-->
+
+  <description>
+  This is the build file for OpenLaszlo ActionScript3/SWF9+ applications running inside an Adobe AIR container.
+  </description>
+
+  <!-- Ignore the system classpath -->
+  <property name="build.sysclasspath" value="ignore" />
+
+  <property environment="env"/>
+
+  <!-- OpenLaszlo properties -->
+  <property name="LPS_HOME" value="${env.LPS_HOME}"/>
+  <property file="${basedir}/build.properties"/>
+
+  <!-- Compile and package temp folders -->
+  <property name="temp.folder" value="./temp" />
+  <property name="temp.zip.package" value="${temp.folder}/zip" />
+  <property name="temp.zip.extracted" value="${temp.folder}/extracted" />
+
+  <!-- CLASSPATH for Laszlo compiler lzc -->
+  <path id="laszlo.compiler.classpath">
+    <pathelement location="${LPS_HOME}/WEB-INF/lps/server/build"/>
+    <pathelement location="${LPS_HOME}/WEB-INF/classes"/>
+    <pathelement location="${servlet.jar}"/>
+    <fileset dir="${LPS_HOME}/WEB-INF/lib" includes="**/*.jar"/>
+  </path>
+
+  <!--================  Target [all]  ===================-->
+  <target name="all" 
+      description="Compile LZX file and copy generated files to PhoneGap assets/www folder"
+      depends="clean, compile-to-js, process-zip-package, copy-to-www-folder">
+  </target>
+
+  <!--================  Target [clean] ==============-->
+  <target name="clean" depends="package-cleanup">
+    <delete>
+      <fileset dir="." defaultexcludes="no" >
+        <include name="temp/*~"/>
+        <include name="build/**" />
+      </fileset>
+    </delete>
+    <delete dir="temp" /> 
+  </target>
+
+  <!-- Remove the files generated into the basedir when compiling and
+       creating the zip package -->
+  <target name="package-cleanup">
+    <script language="javascript">
+      var spriteFile = openlaszloPhoneGapCompiler.getProperty("target.file")
+                       .replace(".lzx", "") + ".sprite.png";
+      openlaszloPhoneGapCompiler.setProperty("target.sprite.png", spriteFile);
+    </script>
+    <delete file="${target.sprite.png}" />
+    <delete file="${target.file}.js" />
+    <delete dir="lps" />
+  </target>
+
+  <!--================  Target [init] ==============-->
+  <target name="init" depends="checkForLZXFile,checkForTargetFolder">
+    <fail message="LPS_HOME not set" unless="env.LPS_HOME"/>
+    <fail message="Target LZX file for compilation not set in build.properties" unless="target.file"/> 
+    <fail message="Target folder for generated ActionScript 3 source code not set in build.properties" unless="phonegap.www.folder"/>
+
+    <!-- Temp folder for ZIP package -->
+    <mkdir dir="${temp.folder}" />
+    <mkdir dir="${temp.zip.package}" />
+    <mkdir dir="${temp.zip.extracted}" />
+  </target>
+
+  <target name="checkForLZXFile" depends="lzx.file.check" if="lzx.file.missing">
+    <fail message="The LZX file &lt;${target.file}&gt; could not be found!" />
+  </target>
+
+  <target name="checkForTargetFolder" depends="target.folder.check" if="target.folder.missing">
+    <fail message="Folder ${phonegap.www.folder} doesn't exist, please create first!" />
+  </target>
+
+  <!--================  Target [compile-to-js] ==============-->
+  <target name="compile-to-js" 
+      description="Compile the OpenLaszlo LZX file to HTML5 JavaScript"
+      depends="init" >
+    <echo message="Start compilation of ${target.file} with the OpenLaszlo compiler" />
+    <antcall target="compile-and-package">
+      <param name="file" value="${target.file}" />
+      <param name="args" value="--runtime=dhtml --output ${basedir}/temp/zip/app-package.zip" />
+    </antcall>
+  </target>
+
+  <!-- Compile the file to JavaScript and package the LPS resources into it -->
+  <target name="compile-and-package" description="Compiling to JavaScript and packaging ZIP">
+    <echo message="Compiling ${file}"/>
+    <echo message="args: ${args} ${file}"/>
+    <echo message="Using LPS_HOME: ${LPS_HOME}"/>
+    <java classpathref="laszlo.compiler.classpath" classname="org.openlaszlo.utils.DeployMain" fork="yes">
+      <jvmarg value="-Xmx1024M"/>
+      <!-- TODO: in the shell scrip lzdeploy LPS_HOME is set to to
+              export LPS_HOME . "${LPS_HOME}/WEB-INF/lps/server/bin/lzenv"
+           That won't work here, since the compiler cannot find lps.properties in that
+           case. Waiting for Henry's feedback.
+           http://www.openlaszlo.org/svn/openlaszlo/trunk/WEB-INF/lps/server/bin/lzdeploy
+      -->
+      <jvmarg value="-DLPS_HOME=${LPS_HOME}"/>
+      <arg line=" ${args} ${file}"/>
+    </java>
+  </target>
+
+  <target name="copy-to-www-folder" depends="compile-to-js, package-cleanup">
+    <echo message="Copying files from ${tempPathToAS3Files} to ${phonegap.www.folder}" />
+    <copy todir="${phonegap.www.folder}">
+      <fileset dir="${basedir}/temp/unzipped" casesensitive="yes">
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- Unzip the OpenLaszlo deployment ZIP file --> 
+  <target name="process-zip-package" depends="compile-to-js">
+    <unzip src="${basedir}/temp/zip/app-package.zip" dest="temp/unzipped" />
+  </target>
+
+  <!--================  Helper targets  =================-->
+  <!-- Check if the LZX file in ${target.file} exists --> 
+  <target name="lzx.file.check">
+    <condition property="lzx.file.missing">
+      <not>
+        <available file="${target.file}" type="file"/>
+      </not>
+    </condition>
+  </target>
+  <!-- Check if target folder for the generated source code exist. --> 
+  <target name="target.folder.check">
+    <condition property="target.folder.missing">
+      <not>
+        <available file="${phonegap.www.folder}" type="dir"/>
+      </not>
+    </condition>
+  </target>
+
+</project>
