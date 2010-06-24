@@ -15,18 +15,16 @@
    IMPORTANT:
    Please set the following vars in your custom build.properties file.
         
-       target.file=your_file_name_without_path.lzx
+       target.file= LZX file you want to compile
        
-       phonegap.www.folder=/air_project_folder/src
+       phonegap.www.folder= The www folder within the PhoneGap Android application
 
   The environment variable $LPS_HOME must point to a folder containing an
   installation of OpenLaszlo 5.0+ (or OpenLaszlo TRUNK).
   
 -->
 
-  <description>
-  This is the build file for OpenLaszlo ActionScript3/SWF9+ applications running inside an Adobe AIR container.
-  </description>
+  <description>Compile HTML5 LZX app and copy JS and resources over to PhoneGap www folder.</description>
 
   <!-- Ignore the system classpath -->
   <property name="build.sysclasspath" value="ignore" />
@@ -139,7 +137,12 @@
 
   <!-- Unzip the OpenLaszlo deployment ZIP file --> 
   <target name="process-zip-package" depends="compile-to-js">
-    <unzip src="${basedir}/temp/zip/app-package.zip" dest="${temp.zip.extracted}" />
+    <unzip src="${basedir}/temp/zip/app-package.zip" dest="${temp.zip.extracted}">
+	    <patternset>
+	        <include name="lps/"/>
+	        <include name="${target.file}.js" />
+	    </patternset>
+	</unzip>
   </target>
 
   <!--================  Helper targets  =================-->
