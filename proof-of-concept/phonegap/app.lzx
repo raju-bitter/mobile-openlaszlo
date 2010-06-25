@@ -1,0 +1,19 @@
+<canvas width="100%" height="100%" proxied="false">
+
+    <view height="90%" valign="middle" align="center" width="90%">
+        <simplelayout axis="y" spacing="20" />
+        <button text="Make me beep!" onclick="navigator.notification.beep(1)" width="100%" height="60" />
+        <button text="Good vibrations..." onclick="navigator.notification.vibrate();" width="100%" height="60" />
+        <button text="Get my position" onclick="navigator.geolocation.getCurrentPosition(callback.geoCallbackSuccess, callback.geoCallbackFailure)" width="100%" height="60" />
+    </view>
+
+    <node id="callback">
+        <method name="geoCallbackSuccess" args="position">
+            navigator.notification.alert("Lat: " + position.coords.latitude + " / Long: " + + position.coords.longitude);
+        </method>
+        <method name="geoCallbackFailure" args="">
+            navigator.notification.alert("Geoposition could not be loaded");
+        </method>
+    </node>
+ 
+</canvas>
