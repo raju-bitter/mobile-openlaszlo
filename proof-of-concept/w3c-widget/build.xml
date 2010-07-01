@@ -119,12 +119,6 @@
     <echo message="Using LPS_HOME: ${LPS_HOME}"/>
     <java classpathref="laszlo.compiler.classpath" classname="org.openlaszlo.utils.DeployMain" fork="yes">
       <jvmarg value="-Xmx1024M"/>
-    <!-- TODO: in the shell scrip lzdeploy LPS_HOME is set to to
-        export LPS_HOME . "${LPS_HOME}/WEB-INF/lps/server/bin/lzenv"
-       That won't work here, since the compiler cannot find lps.properties in that
-       case. Waiting for Henry's feedback.
-       http://www.openlaszlo.org/svn/openlaszlo/trunk/WEB-INF/lps/server/bin/lzdeploy
-    -->
       <jvmarg value="-DLPS_HOME=${LPS_HOME}"/>
       <arg line=" ${args} ${file}"/>
     </java>
