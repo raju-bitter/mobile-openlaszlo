@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget id="http://www.example.com/my_widget" version="1.0 beta"
+  dockable="@dockable@" floatable="@floatable@"> 
+  <widgetname>@widgetname@</widgetname> 
+  <description>@description@</description> 
+  <icon>@icon@</icon>
+  <width>@width@</width> 
+  <height>@height@</height> 
+  <author>
+    <name>@author.name@</name> 
+    <organization>@author.organization@</organization> 
+    <link>@author.link@</link> 
+    <email>@author.email@</email>
+  </author> 
+  <security>
+    <access> 
+      <protocol>@security.access.protocol@</protocol> 
+      <host>@security.access.host@</host> 
+      <port>@security.access.port@</port> 
+      <path>@security.access.path@</path>
+    </access> 
+  </security> 
+  <nocursor/>
+  <update url="@update._url@"></update>
+  <license>@license@</license>
+</widget>
