@@ -5,6 +5,9 @@ Overview
 A high level overview of the framework/toolset approach can be found at http://wiki.github.com/raju-bitter/mobile-openlaszlo/. A first release of the complete toolset can be expected for November 2010. Pre-releases will be available in early July 2010 (Adobe AIR 2.0 deployment scripts, modified LFC classes for Adobe AIR, OpenLaszlo app running inside PhoneGap on Android 2.1+ phones). Check the Mobile OpenLaszlo Roadmap page in the Wiki for up-to-date information:
 http://wiki.github.com/raju-bitter/mobile-openlaszlo/roadmap
 
+If you want to have a quick look at some early proof-of-concepts and samples, check the Vimeo Mobile OpenLaszlo Video Channel featuring screen casts of apps and tools:
+http://vimeo.com/channels/118402
+
 Community
 If you are interested in the project, you are welcome to join the discussion in the mobile OpenLaszlo mailing list at
 http://www.openlaszlo.org/mailman/listinfo/mobile
