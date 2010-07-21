@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <widget id="http://www.example.com/my_widget" version="1.0 beta"
-  dockable="@dockable@" floatable="@floatable@"> 
+  dockable="@dockable@" floatable="@floatable@" network="public"> 
   <widgetname>@widgetname@</widgetname> 
   <description>@description@</description> 
   <icon>@icon@</icon>
@@ -14,10 +14,10 @@
   </author> 
   <security>
     <access> 
-      <protocol>@security.access.protocol@</protocol> 
+      <!--protocol>@security.access.protocol@</protocol> 
       <host>@security.access.host@</host> 
       <port>@security.access.port@</port> 
-      <path>@security.access.path@</path>
+      <path>@security.access.path@</path-->
     </access> 
   </security> 
   <nocursor/>
