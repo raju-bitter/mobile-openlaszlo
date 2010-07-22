@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns       = "http://www.w3.org/ns/widgets"
+        id          = "http://www.mobileopenlaszlo.org/widgets/laszloweather"
+        version     = "0.1 Alpha"
+        height      = "@width@"
+        width       = "@height@"
+        viewmodes   = "widget">
+  <access origin="http://weather.yahooapis.com" subdomains="false"/>
+  <access origin="http://l.yimg.com" subdomains="false"/>
+  <access origin="http://weather.yahoo.com" subdomains="true"/>
+  <name short="@widgetname@">
+    @widgetname@
+  </name>
+  <description>
+    @description@
+  </description>
+  <author href="@author.link@"
+  	      email="@author.email@">@author.name@</author>
+  <icon src="@icon@"/>
+  <content src="index.html"/>
+  <license>@license@</license>
+</widget>
