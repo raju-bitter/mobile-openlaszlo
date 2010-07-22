@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<widget id="http://www.example.com/my_widget" version="1.0 beta"
+<widget id="widget.mobileopenlaszlo.org/opera/laszloweather" version="1.0 beta"
   dockable="@dockable@" floatable="@floatable@" network="public"> 
   <widgetname>@widgetname@</widgetname> 
   <description>@description@</description> 
@@ -11,16 +11,17 @@
     <organization>@author.organization@</organization> 
     <link>@author.link@</link> 
     <email>@author.email@</email>
-  </author> 
+  </author>
   <security>
-    <access> 
-      <!--protocol>@security.access.protocol@</protocol> 
-      <host>@security.access.host@</host> 
-      <port>@security.access.port@</port> 
-      <path>@security.access.path@</path-->
-    </access> 
-  </security> 
-  <nocursor/>
-  <update url="@update._url@"></update>
+	<access>
+	  <protocol>http</protocol>
+	  <host>weather.yahooapis.com</host>
+	  <host>l.yimg.com</host>
+	  <host>weather.yahoo.com</host>
+	</access>
+  </security>
+  <!-- Disallow browser plugins -->
+  <content plugins="no" />
+  <!--update url="@update._url@"></update-->
   <license>@license@</license>
 </widget>
