@@ -119,7 +119,6 @@
     <copy todir="${adobe.air.srcfolder}">
       <fileset dir="${tempPathToAS3Files}" casesensitive="no">
         <include name="**/*.as" />
-        <exclude name="**/LzSpriteApplication.as" />
         <!-- Include image, video, XML dataset and other resource files.
              Add other file extensions here for your own project -->
         <include name="**/*.jpg" />
