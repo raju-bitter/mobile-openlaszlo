@@ -49,7 +49,7 @@
        for path to AS3 source code -->
 
   <!-- Flex Ant task -->
-  <taskdef resource="flexTasks.tasks" classpath="${adobe.flex.home}/flexTasks/lib/flexTasks.jar" />
+  <taskdef resource="flexTasks.tasks" classpath="${adobe.flex.home}/ant/lib/flexTasks.jar" />
 
 
   <!-- CLASSPATH for Laszlo compiler lzc -->
