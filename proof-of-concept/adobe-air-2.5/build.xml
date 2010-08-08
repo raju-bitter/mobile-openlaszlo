@@ -45,12 +45,12 @@
       subfolder relative to $LPS_HOME, the folder path is added
       to the temp build path -->
   <property name="tempPathToAS3Files" value="temp/lzswf9/build"/>
-  <!-- Length of basedir and LPS_HOME, used to retrieve subfolder value
-       for path to AS3 source code -->
 
   <!-- Flex Ant task -->
   <taskdef resource="flexTasks.tasks" classpath="${adobe.flex.home}/ant/lib/flexTasks.jar" />
 
+  <!-- XMLTask (lib for modifying XML files out of Ant) -->
+  <taskdef name="xmltask" classname="com.oopsconsultancy.xmltask.ant.XmlTask"/>
 
   <!-- CLASSPATH for Laszlo compiler lzc -->
   <path id="laszlo.compiler.classpath">
@@ -69,34 +69,39 @@
   </target>
 
   <target name="checkForLZXFile" depends="lzx.file.check" if="lzx.file.missing">
-	<fail message="The LZX file &lt;${target.file}&gt; could not be found!" />
+    <fail message="The LZX file &lt;${target.file}&gt; could not be found!" />
   </target>
 
   <target name="checkForTargetFolder" depends="target.folder.check" if="target.folder.missing">
-	<fail message="Folder ${adobe.air.srcfolder} doesn't exist, please create first!" />
+    <fail message="Folder ${adobe.air.srcfolder} doesn't exist, please create first!" />
   </target>
 
+
+  <!--================  Target [generate-as3] ============== -->
+  <!-- Set <canvas> @debug attribute dynamically
+       Requires XMLTask JAR in Ant classpath: http://www.oopsconsultancy.com/software/xmltask/
+  -->
+  <target name="set-canvas-debug-attr">
+    <xmltask source="${target.file}" todir="."> 
+       <attr path="canvas" attr="debug" value="${debug}" /> 
+    </xmltask>
+  </target>  
+
   <!--================  Target [generate-as3] ==============-->
-  <target name="generate-as3" 
+  <target name="generate-as3"
       description="Generate AS3 code for Adobe AIR app"
       depends="init" >
+
+    <echo message="Setting canvas @debug=${debug}" />
+    <antcall target="set-canvas-debug-attr">
+      <param name="debug" value="${debug}" />
+    </antcall>
+
     <echo message="Generating AS3 source code" />
     <antcall target="compile-lzx-file">
       <param name="file" value="${target.file}" />
       <param name="args" value=" --lzxonly --runtime=swf10" />
     </antcall>
-    <!-- The folder for the generated source files is
-         ${basedir}/${tempPathToAS3Files}/LZX_FILE_NAME_WITHOUT_LZX_ENDING/
-    -->
-    <script language="javascript">
-    var targetFile = openlaszloAirTool.getProperty("target.file");
-    var tempPath = openlaszloAirTool.getProperty("tempPathToAS3Files");
-    openlaszloAirTool.setProperty("tempPathToAS3Files", openlaszloAirTool.getProperty("basedir") + 
-                 "/" + tempPath + "/" +
-                 targetFile.substring(0, targetFile.length()-4));
-    </script>
-    <!-- Copy generated AS3 source files to AIR application -->
-    <echo message="tempPathToAS3Files: ${tempPathToAS3Files}" />
   </target>
 
   <!-- solo-compile-all-file: compiles ${file}, using options ${args} -->
@@ -114,9 +119,22 @@
     </java>
   </target>
 
-  <target name="copy-to-air-src-folder" depends="generate-as3">
+  <target name="copy-to-air-src-folder">
+    <!-- The folder for the generated source files is
+         ${basedir}/${tempPathToAS3Files}/LZX_FILE_NAME_WITHOUT_LZX_ENDING/
+    -->
+    <script language="javascript">
+      var targetFile = openlaszloAirTool.getProperty("target.file");
+      var tempPath = openlaszloAirTool.getProperty("tempPathToAS3Files");
+      openlaszloAirTool.setProperty("tempPathToAS3Files", openlaszloAirTool.getProperty("basedir") + 
+                 "/" + tempPath + "/" +
+                 targetFile.substring(0, targetFile.length()-4));
+    </script>
+    <!-- Copy generated AS3 source files to AIR application -->
+    <echo message="tempPathToAS3Files: ${tempPathToAS3Files}" />
     <echo message="Copying files from ${tempPathToAS3Files} to ${adobe.air.srcfolder}" />
-    <copy todir="${adobe.air.srcfolder}">
+    <copy todir="${adobe.air.srcfolder}"
+      overwrite="true">
       <fileset dir="${tempPathToAS3Files}" casesensitive="no">
         <include name="**/*.as" />
         <!-- Include image, video, XML dataset and other resource files.
@@ -125,8 +143,6 @@
         <include name="**/*.png" />
         <include name="**/*.xml" />
         <include name="**/*.flv" />
-        <include name="**/*.swf" />
-        <include name="**/*.ttf" />
       </fileset>
     </copy>
   </target>
@@ -143,15 +159,18 @@
 
   <!--================  Target [all]  ===================-->
   <target name="all" 
-      description="Clean, build, generate-as3, copy-to-air-src-folder"
-      depends="clean, generate-as3, copy-to-air-src-folder">
+      description="Clean, build, generate-as3, copy-to-air-src-folder">
+    <antcall target="generate-as3">
+      <param name="debug" value="${canvas.debug}" />
+    </antcall>
+    <antcall target="copy-to-air-src-folder" />
   </target>
 
   <!--================  Helper targets  =================-->
   <!-- Check if the LZX file in ${target.file} exists --> 
   <target name="lzx.file.check">
     <condition property="lzx.file.missing">
-	  <not>
+      <not>
         <available file="${target.file}" type="file"/>
       </not>
     </condition>
@@ -159,7 +178,7 @@
   <!-- Check if target folder for the generated source code exist. --> 
   <target name="target.folder.check">
     <condition property="target.folder.missing">
-	  <not>
+      <not>
         <available file="${adobe.air.srcfolder}" type="dir"/>
       </not>
     </condition>
