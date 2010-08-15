@@ -227,6 +227,7 @@
 	  description="Packages the build SWF file from a temp directory.">
 	  <echo message="Copying AIR app descriptor from ${TEMPLATE_FOLDER}/${AIR_DESC_TEMPLATE} to ${BUILD_DIR}" />
 	  <xmltask source="${TEMPLATE_FOLDER}/${AIR_DESC_TEMPLATE}" dest="${BUILD_DIR}/${LZX_FILE}-app.xml">
+		<replace path="/:application/:id/text()" withText="${ANDROID_APP_ID}"/>
 		<replace path="/:application/:filename/text()" withText="${FILE_NAME}"/>
 		<replace path="/:application/:initialWindow/:content/text()" withText="${LZX_FILE}.swf"/>
 	  </xmltask>
@@ -265,9 +266,26 @@
 	<delete file="${KEYSTORE}" />
   </target>
 
+  <!--================	Target [uninstall] ==============-->
+  <target name="uninstall"	>
+     <exec executable="adb"> 
+             <arg value="uninstall"/> 
+             <arg value="app.${ANDROID_APP_ID}"/> 
+     </exec> 
+  </target>
+
+  <!--================	Target [install] ==============-->
+  <target name="install">
+     <exec executable="adb"> 
+             <arg value="install"/> 
+             <arg value="${RELEASE_DIR}/${AIR_FILE}.apk"/> 
+     </exec> 
+  </target>
+
+
   <!--================	Target [all]  ===================-->
   <target name="all" 
-	  description="Clean, build, generate-as3, copy-to-air-src-folder"
+	  description="Compile the LZX files and packages the Android APK"
 	  depends="clean">
 	<echo message="DEBUG_FLAG=${DEBUG_FLAG}" />
 	<antcall target="generate-as3">
@@ -275,6 +293,14 @@
 	</antcall>
 	<antcall target="copy-to-air-src-folder" />
 	<antcall target="package" />
+  </target>
+
+  <!--================	Target [install]  ===================-->
+  <target name="run" 
+	  description="Builds the APK package and installs the app on the device"
+	  depends="all">
+ 	<antcall target="uninstall" />
+	<antcall target="install" />
   </target>
 
   <!--================	Helper targets	=================-->
