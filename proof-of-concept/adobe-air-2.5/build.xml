@@ -1,25 +1,25 @@
 <project name="openlaszloAirTool" default="all" basedir=".">
 <!-- Copyright: Mobile OpenLaszlo
-	 http://github.com/raju-bitter/mobile-openlaszlo
-	 MIT license http://www.opensource.org/licenses/mit-license.php
-	 Use is subject to license terms. 
+     http://github.com/raju-bitter/mobile-openlaszlo
+     MIT license http://www.opensource.org/licenses/mit-license.php
+     Use is subject to license terms. 
 
-	 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-	 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-	 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-	 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-	 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-	 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-	 THE SOFTWARE.
+     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+     THE SOFTWARE.
 
    IMPORTANT:
    Please set the following vars in your custom build.properties file.
-		
-	   LZX_FILE=your_file_name_without_path.lzx
-	   
-	   SOURCE_DIR=/air_project_folder/src
+        
+       LZX_FILE=your_file_name_without_path.lzx
+       
+       AS3_SOURCE_DIR=/air_project_folder/src
 
-	   FLEX_HOME=/path/to/your/adobe/flex/sdk/
+       FLEX_HOME=/path/to/your/adobe/flex/sdk/
 
   The environment variable $LPS_HOME must point to a folder containing an
   installation of OpenLaszlo 5.0+ (or OpenLaszlo TRUNK).
@@ -41,10 +41,10 @@
   <property file="${basedir}/build.properties"/>
 
   <!-- Temp folder where the "lzxonly" compile step writes the 
-	  generate AS3 classes to. If the target LZX file is in a 
-	  subfolder relative to $LPS_HOME, the folder path is added
-	  to the temp build path -->
-  <property name="tempPathToAS3Files" value="temp/lzswf9/build"/>
+      generate AS3 classes to. If the target LZX file is in a 
+      subfolder relative to $LPS_HOME, the folder path is added
+      to the temp build path -->
+  <property name="tempPathToAS3Files" value="${TEMP_DIR}/lzswf9/${TEMP_LZX_DIR}/build/"/>
 
   <!-- FLEX tasks -->
   <taskdef name="mxmlc" classname="flex.ant.MxmlcTask" classpath="${FLEX_TASKS}"/>
@@ -54,227 +54,271 @@
   <!-- XMLTask (lib for modifying XML files out of Ant) -->
   <taskdef name="xmltask" classname="com.oopsconsultancy.xmltask.ant.XmlTask"/>
 
+  <!-- Ant contrib taskdef (used for if-else) -->
+  <taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+
   <!-- CLASSPATH for Laszlo compiler lzc -->
   <path id="laszlo.compiler.classpath">
-	<pathelement location="${LPS_HOME}/WEB-INF/lps/server/build"/>
-	<pathelement location="${LPS_HOME}/WEB-INF/classes"/>
-	<pathelement location="${servlet.jar}"/>
-	<fileset dir="${LPS_HOME}/WEB-INF/lib" includes="**/*.jar"/>
+    <pathelement location="${LPS_HOME}/WEB-INF/lps/server/build"/>
+    <pathelement location="${LPS_HOME}/WEB-INF/classes"/>
+    <pathelement location="${servlet.jar}"/>
+    <fileset dir="${LPS_HOME}/WEB-INF/lib" includes="**/*.jar"/>
   </path>
 
 
-  <!--================	Target [init] ==============-->
+  <!--================  Target [init] ==============-->
   <target name="init" depends="checkForLZXFile">
-	<fail message="LPS_HOME not set" unless="env.LPS_HOME"/>
-	<fail message="Target LZX file for compilation not set in build.properties" unless="LZX_FILE"/>
-	<!-- Create temp folder -->
-	<mkdir dir="${TEMP_DIR}" />
-	<mkdir dir="${SOURCE_DIR}" />
-	<mkdir dir="${RELEASE_DIR}" />
-	<mkdir dir="${BUILD_DIR}" />
-	<mkdir dir="${LIBRARY_DIR}" />
-	<fail message="Target folder for generated ActionScript 3 source code not set in build.properties" unless="SOURCE_DIR"/>
-	<antcall target="checkForTargetFolder" />
+    <fail message="LPS_HOME not set" unless="env.LPS_HOME"/>
+    <fail message="Target LZX file for compilation not set in build.properties" unless="LZX_FILE"/>
+    <!-- Create temp folder -->
+    <mkdir dir="${TEMP_DIR}" />
+    <mkdir dir="${TEMP_LZX_DIR}" />
+    <mkdir dir="${AS3_SOURCE_DIR}" />
+    <mkdir dir="${RELEASE_DIR}" />
+    <mkdir dir="${BUILD_DIR}" />
+    <mkdir dir="${LIBRARY_DIR}" />
+    <fail message="Target folder for generated ActionScript 3 source code not set in build.properties" unless="AS3_SOURCE_DIR"/>
+    <antcall target="checkForTargetFolder" />
   </target>
 
   <target name="checkForLZXFile" depends="lzx.file.check" if="lzx.file.missing">
-	<fail message="The LZX file ${LZX_FILE} could not be found!" />
+    <fail message="The LZX file ${LZX_FILE} could not be found!" />
   </target>
 
   <target name="checkForTargetFolder" depends="target.folder.check" if="target.folder.missing">
-	<fail message="Folder ${SOURCE_DIR} doesn't exist, please create first!" />
+    <fail message="Folder ${AS3_SOURCE_DIR} doesn't exist, please create first!" />
   </target>
 
 
-  <!--================	Target [set-canvas-debug-attr] ============== -->
+  <!--================  Target [set-canvas-debug-attr] ============== -->
   <!-- Set <canvas> @debug attribute dynamically
-	   Requires XMLTask JAR in Ant classpath: http://www.oopsconsultancy.com/software/xmltask/
+       Requires XMLTask JAR in Ant classpath: http://www.oopsconsultancy.com/software/xmltask/
   -->
   <target name="set-canvas-debug-attr">
-	<echo message="Set canvas debug attribute to ${debug}" />
-	<xmltask source="${LZX_FILE}" todir="."> 
-	   <attr path="canvas" attr="debug" value="${debug}" /> 
-	</xmltask>
-  </target>	 
+    <echo message="Set canvas debug attribute to ${debug}" />
+    <xmltask source="${LZX_FILE}" todir="${TEMP_LZX_DIR}"> 
+       <attr path="canvas" attr="debug" value="${debug}" /> 
+    </xmltask>
+  </target>  
 
-  <!--================	Target [generate-as3] ==============-->
+  <!--================  Target [generate-as3] ==============-->
   <target name="generate-as3"
-	  description="Generate AS3 code for Adobe AIR app"
-	  depends="init" >
+      description="Generate AS3 code for Adobe AIR app"
+      depends="init" >
 
-	<echo message="Setting canvas @debug=${debug}" />
-	<antcall target="set-canvas-debug-attr">
-	  <param name="debug" value="${debug}" />
-	</antcall>
+    <echo message="Setting canvas @debug=${debug}" />
+    <antcall target="set-canvas-debug-attr">
+      <param name="debug" value="${debug}" />
+    </antcall>
 
-	<echo message="Generating AS3 source code" />
-	<antcall target="compile-lzx-file">
-	  <param name="file" value="${LZX_FILE}" />
-	  <param name="args" value=" --lzxonly --runtime=swf10" />
-	</antcall>
+    <echo message="Generating AS3 source code" />
+    <antcall target="compile-lzx-file">
+      <param name="file" value="${LZX_FILE}" />
+      <param name="args" value=" --lzxonly --runtime=swf10" />
+    </antcall>
   </target>
 
   <!-- Generate AS3 code out of LZX file: compiles ${file}, using options ${args} -->
   <target name="compile-lzx-file" description="Compiling LZX to ActionScript 3 source code">
-	<echo message="Compiling ${file}"/>
-	<echo message="arg: ${args} ${file}"/>
-	<echo message="Using LPS_HOME: ${LPS_HOME}"/>
-	<java classpathref="laszlo.compiler.classpath" classname="org.openlaszlo.compiler.Main" fork="yes">
-	  <!-- Don't use the default Java temp dir. The generated ActionScript3 files
-		   will be located in the Java temp folder -->
-	  <sysproperty key="java.io.tmpdir" value="./temp" />
-	  <jvmarg value="-Xmx1024M"/>
-	  <jvmarg value="-DLPS_HOME=${LPS_HOME}"/>
-	  <arg line="${args} ${file}"/>
-	</java>
-	<!-- Remove generated SWF file -->
-	<delete>
-	  <fileset dir="${basedir}" casesensitive="no">
-		<include name="*.swf" />
-	  </fileset>
-	</delete>
+    <copy todir="${TEMP_LZX_DIR}/resources">
+      <fileset dir="resources" casesensitive="true">
+        <include name="**/*.jpg" />
+        <include name="**/*.png" />
+        <include name="**/*.xml" />
+        <include name="**/*.flv" />
+      </fileset>
+    </copy>
+    <copy todir="${TEMP_LZX_DIR}/library">
+      <fileset dir="library" casesensitive="true">
+        <include name="**/*.lzx" />
+      </fileset>
+    </copy>
+    <echo message="Compiling ${TEMP_LZX_DIR}/${file}"/>
+    <echo message="arg: ${args} ${TEMP_LZX_DIR}/${file}"/>
+    <echo message="Using LPS_HOME: ${LPS_HOME}"/>
+    <java classpathref="laszlo.compiler.classpath" classname="org.openlaszlo.compiler.Main" fork="yes">
+      <!-- Don't use the default Java temp dir. The generated ActionScript3 files
+           will be located in the Java temp folder -->
+      <sysproperty key="java.io.tmpdir" value="./temp" />
+      <jvmarg value="-Xmx1024M"/>
+      <jvmarg value="-DLPS_HOME=${LPS_HOME}"/>
+      <arg line="${args} ${TEMP_LZX_DIR}/${file}"/>
+    </java>
+    <!-- Remove generated SWF file -->
+    <delete>
+      <fileset dir="${basedir}" casesensitive="no">
+        <include name="*.swf" />
+      </fileset>
+    </delete>
   </target>
 
 
   <target name="copy-to-air-src-folder">
-	<!-- The folder for the generated source files is
-		 ${basedir}/${tempPathToAS3Files}/LZX_FILE_NAME_WITHOUT_LZX_ENDING/
-	-->
-	<script language="javascript">
-	  var targetFile = openlaszloAirTool.getProperty("LZX_FILE");
-	  var tempPath = openlaszloAirTool.getProperty("tempPathToAS3Files");
-	  openlaszloAirTool.setProperty("tempPathToAS3Files", openlaszloAirTool.getProperty("basedir") + 
-				 "/" + tempPath + "/" +
-				 targetFile.substring(0, targetFile.length()-4));
-	</script>
-	<!-- Copy generated AS3 source files to AIR application -->
-	<echo message="tempPathToAS3Files: ${tempPathToAS3Files}" />
-	<echo message="Copying files from ${tempPathToAS3Files} to ${SOURCE_DIR}" />
-	<copy todir="${SOURCE_DIR}"
-	  overwrite="true">
-	  <fileset dir="${tempPathToAS3Files}" casesensitive="no">
-		<include name="**/*.as" />
-		<!-- Include image, video, XML dataset and other resource files.
-			 Add other file extensions here for your own project -->
-		<include name="**/*.jpg" />
-		<include name="**/*.png" />
-		<include name="**/*.xml" />
-		<include name="**/*.flv" />
-	  </fileset>
-	</copy>
+    <!-- The folder for the generated source files is
+         ${basedir}/${tempPathToAS3Files}/LZX_FILE_NAME_WITHOUT_LZX_ENDING/
+    -->
+    <script language="javascript">
+      var targetFile = openlaszloAirTool.getProperty("LZX_FILE");
+      var tempPath = openlaszloAirTool.getProperty("tempPathToAS3Files");
+      openlaszloAirTool.setProperty("tempPathToAS3Files", openlaszloAirTool.getProperty("basedir") + 
+                 "/" + tempPath + "/" +
+                 targetFile.substring(0, targetFile.length()-4));
+    </script>
+    <!-- Copy generated AS3 code to AS3 source folder-->
+    <echo message="tempPathToAS3Files: ${tempPathToAS3Files}" />
+    <echo message="Copying files from ${tempPathToAS3Files} to ${AS3_SOURCE_DIR}" />
+    <copy todir="${AS3_SOURCE_DIR}"
+      overwrite="true">
+      <fileset dir="${tempPathToAS3Files}" casesensitive="no">
+        <include name="**/*.as" />
+        <!-- Include image, video, XML dataset and other resource files.
+             Add other file extensions here for your own project -->
+        <include name="**/*.jpg" />
+        <include name="**/*.png" />
+        <include name="**/*.xml" />
+        <include name="**/*.flv" />
+      </fileset>
+    </copy>
 
-	<!-- Delete directories generated by LZX->AS3 compiler -->
-	<delete dir="${TEMP_DIR}/lzswf9" failOnError="true" includeEmptyDirs="true" />
-	<delete dir="${TEMP_DIR}/lzccache" failOnError="true" includeEmptyDirs="true" />
+    <!-- Delete directories generated by LZX->AS3 compiler -->
+    <delete dir="${TEMP_DIR}/lzswf9" failOnError="true" includeEmptyDirs="true" />
+    <delete dir="${TEMP_DIR}/lzccache" failOnError="true" includeEmptyDirs="true" />
   </target>
 
-  <!--================	Target [compile-as3-to-swf] ==============-->
+  <!--================  Target [compile-as3-to-swf] ==============-->
   <target name="compile-as3-to-swf"
-	  description="Compiles the AIR application to a SWF file and places SWF in a temp directory to be packaged.">
-	<!-- Copy correct LFC lib into temp/lib folder -->
-	<script language="javascript">
-	  var lfcFile = "LFC10.swc";
-	  if (openlaszloAirTool.getProperty("DEBUG_FLAG") == "true") {
-		lfcFile = "LFC10-debug.swc";
-	  }
-	  openlaszloAirTool.setProperty("LFC_FILE", lfcFile);
-	</script>	
-	<echo message="Copying ${LFC_FILE} to libs folder" />
-	<copy todir="${TEMP_DIR}/libs" overwrite="true">
-	  <fileset dir="${LPS_HOME}/lps/includes/lfc/" casesensitive="true">
-		<include name="${LFC_FILE}" />
-	  </fileset>
-	</copy>
-
-	<!-- Start the Flex compiler -->
-	<echo message="Compling ${SOURCE_DIR}/LzSpriteApplication.as" />
-	<mxmlc file="${SOURCE_DIR}/LzSpriteApplication.as"
-		output="${BUILD_DIR}/${LZX_FILE}.swf"
-		locale="${LOCALE}"
-		static-rsls="true"
-		accessible="true"
-		configname="air"
-		debug="${DEBUG_FLAG}"
-		failonerror="true"
-		warnings="false"
-		fork="true"
-		maxmemory="512m">
-		<source-path path-element="${SOURCE_DIR}"/>
-		<external-library-path file="${FLEX_HOME}/frameworks/libs/air/airglobal.swc" append="true"/>
-		<library-path dir="${LIBRARY_DIR}" includes="*.swc" append="true"/>
-	</mxmlc>
+      description="Compiles the AIR application to a SWF file and places SWF in a temp directory to be packaged.">
+    <!-- Copy correct LFC lib into temp/lib folder -->
+    <script language="javascript">
+      var lfcFile = "LFC10.swc";
+      if (openlaszloAirTool.getProperty("DEBUG_FLAG") == "true") {
+        lfcFile = "LFC10-debug.swc";
+      }
+      openlaszloAirTool.setProperty("LFC_FILE", lfcFile);
+    </script>   
+    <echo message="Copying ${LFC_FILE} and external SWC files to libs folder" />
+    <copy todir="${TEMP_DIR}/libs" overwrite="true">
+      <fileset dir="${LPS_HOME}/lps/includes/lfc/" casesensitive="true">
+        <include name="${LFC_FILE}" />
+      </fileset>
+      <fileset dir="${EXTERNAL_SWC_DIR}" casesensitive="true">
+        <include name="*.swc" />
+      </fileset>
+    </copy>
+    <echo message="Copy custom SWCs from ${LIBRARY_DIR} into ${TEMP_DIR}/libs" />
+    <!-- Start the Flex compiler -->
+    <echo message="Compling ${AS3_SOURCE_DIR}/LzSpriteApplication.as" />
+    <echo message="Including SWCs in ${LIBRARY_DIR}" />
+    <mxmlc file="${AS3_SOURCE_DIR}/LzSpriteApplication.as"
+        output="${BUILD_DIR}/${LZX_FILE}.swf"
+        locale="${LOCALE}"
+        static-rsls="true"
+        accessible="true"
+        configname="air"
+        debug="${DEBUG_FLAG}"
+        failonerror="true"
+        warnings="false"
+        fork="true"
+        maxmemory="512m">
+        <source-path path-element="${AS3_SOURCE_DIR}"/>
+        <external-library-path file="${FLEX_HOME}/frameworks/libs/air/airglobal.swc" append="true"/>
+        <library-path dir="${LIBRARY_DIR}" includes="*.swc" append="true"/>
+    </mxmlc>
   </target>
-
-  <target name="certificate" unless="CERTIFICATE_FLAG">
-	  <java jar="${ADT}" fork="true" 
-		  failonerror="true">
-		  <arg value="-certificate"/>
-		  <arg value="-cn"/>
-		  <arg value="${CERT_NAME}"/>
-		  <arg value="-ou"/>
-		  <arg value="${CERT_ORG_UNIT}"/>
-		  <arg value="-o"/>
-		  <arg value="${CERT_ORG_NAME}"/>
-		  <arg value="-c"/>
-		  <arg value="${CERT_COUNTRY}"/>
-		  <arg value="${CERT_KEY_TYPE}"/>
-		  <arg value="${KEYSTORE}"/>
-		  <arg value="${CERT_PASSWORD}"/>
-	  </java>
+  <!--
+    adl -screensize NexusOne -profile mobileDevice temp/build/airtest.lzx-app.xml
+    -->
+  <target name="emulate">
+    <if>
+      <available file="${RELEASE_DIR}/${AIR_FILE}.apk"/>
+      <then>
+        <echo message="${RELEASE_DIR}/${AIR_FILE}.apk already exists, launching emulator" />
+      </then>
+      <else>
+        <!-- Need to compile the app now -->
+        <antcall target="all" />
+      </else>
+    </if>
+    <exec executable="adl"> 
+      <arg value="-screensize"/>
+      <arg value="NexusOne"/>
+      <arg value="-profile"/>
+      <arg value="mobileDevice"/>
+      <arg value="${BUILD_DIR}/${LZX_FILE}-app.xml"/>
+    </exec>
   </target>
   
+  <target name="certificate" unless="CERTIFICATE_FLAG">
+      <java jar="${ADT}" fork="true" 
+          failonerror="true">
+        <arg value="-certificate"/>
+        <arg value="-cn"/>
+        <arg value="${CERT_NAME}"/>
+        <arg value="-ou"/>
+        <arg value="${CERT_ORG_UNIT}"/>
+        <arg value="-o"/>
+        <arg value="${CERT_ORG_NAME}"/>
+        <arg value="-c"/>
+        <arg value="${CERT_COUNTRY}"/>
+        <arg value="${CERT_KEY_TYPE}"/>
+        <arg value="${KEYSTORE}"/>
+        <arg value="${CERT_PASSWORD}"/>
+      </java>
+  </target>
+
   <target name="package" depends="compile-as3-to-swf, certificate"
-	  description="Packages the build SWF file from a temp directory.">
-	  <echo message="Copying AIR app descriptor from ${TEMPLATE_FOLDER}/${AIR_DESC_TEMPLATE} to ${BUILD_DIR}" />
-	  <xmltask source="${TEMPLATE_FOLDER}/${AIR_DESC_TEMPLATE}" dest="${BUILD_DIR}/${LZX_FILE}-app.xml">
-		<replace path="/:application/:id/text()" withText="${ANDROID_APP_ID}"/>
-		<replace path="/:application/:filename/text()" withText="${FILE_NAME}"/>
-		<replace path="/:application/:initialWindow/:content/text()" withText="${LZX_FILE}.swf"/>
-	  </xmltask>
-	  <script language="javascript">
-		var flag = openlaszloAirTool.getProperty("DEBUG_FLAG");
-		if (flag == "true") {
-		  openlaszloAirTool.setProperty("APK_TARGET", "apk-debug");
-		} else {
-		  openlaszloAirTool.setProperty("APK_TARGET", "apk");
-		}
-	  </script>
-	  <echo message="Using ADT target option '-target ${APK_TARGET}'" />
-	  <java jar="${ADT}" fork="true" 
-		  failonerror="true"
-		  maxmemory="512m">
-		  <arg value="-package"/>
-		  <arg value="-target"/>
-		  <arg value="${APK_TARGET}"/>
-		  <arg value="-storetype"/>
-		  <arg value="${STORETYPE}"/>
-		  <arg value="-keystore"/>
-		  <arg value="${KEYSTORE}"/>
-		  <arg value="-storepass"/>
-		  <arg value="${CERT_PASSWORD}"/>
-		  <arg value="${RELEASE_DIR}/${AIR_FILE}.apk"/>
-		  <arg value="${BUILD_DIR}/${LZX_FILE}-app.xml"/>
-		  <arg value="-C"/>
-		  <arg value="${BUILD_DIR}"/>
-		  <arg value="${BUILD_DIR}/${LZX_FILE}.swf"/>
-	  </java>
+      description="Packages the build SWF file from a temp directory.">
+      <echo message="Copying AIR app descriptor from ${TEMPLATE_FOLDER}/${AIR_DESC_TEMPLATE} to ${BUILD_DIR}" />
+      <xmltask source="${TEMPLATE_FOLDER}/${AIR_DESC_TEMPLATE}" dest="${BUILD_DIR}/${LZX_FILE}-app.xml">
+        <replace path="/:application/:id/text()" withText="${ANDROID_APP_ID}"/>
+        <replace path="/:application/:name/text()" withText="${ANDROID_APP_NAME}"/>
+        <replace path="/:application/:filename/text()" withText="${LZX_FILE}"/>
+        <replace path="/:application/:initialWindow/:content/text()" withText="${LZX_FILE}.swf"/>
+      </xmltask>
+      <script language="javascript">
+        var flag = openlaszloAirTool.getProperty("DEBUG_FLAG");
+        if (flag == "true") {
+          openlaszloAirTool.setProperty("APK_TARGET", "apk-debug");
+        } else {
+          openlaszloAirTool.setProperty("APK_TARGET", "apk");
+        }
+      </script>
+      <echo message="Using ADT target option '-target ${APK_TARGET}'" />
+      <java jar="${ADT}" fork="true" 
+          failonerror="true"
+          maxmemory="512m">
+          <arg value="-package"/>
+          <arg value="-target"/>
+          <arg value="${APK_TARGET}"/>
+          <arg value="-storetype"/>
+          <arg value="${STORETYPE}"/>
+          <arg value="-keystore"/>
+          <arg value="${KEYSTORE}"/>
+          <arg value="-storepass"/>
+          <arg value="${CERT_PASSWORD}"/>
+          <arg value="${RELEASE_DIR}/${AIR_FILE}.apk"/>
+          <arg value="${BUILD_DIR}/${LZX_FILE}-app.xml"/>
+          <arg value="-C"/>
+          <arg value="${BUILD_DIR}"/>
+          <arg value="${LZX_FILE}.swf"/>
+      </java>
   </target>
 
-  <!--================	Target [clean] ==============-->
-  <target name="clean"	>
-	<delete dir="${TEMP_DIR}" />
-	<delete file="${KEYSTORE}" />
+  <!--================  Target [clean] ==============-->
+  <target name="clean"  >
+    <delete dir="${TEMP_DIR}" />
+    <delete file="${KEYSTORE}" />
   </target>
 
-  <!--================	Target [uninstall] ==============-->
-  <target name="uninstall"	>
+  <!--================  Target [uninstall] ==============-->
+  <target name="uninstall"  >
      <exec executable="adb"> 
              <arg value="uninstall"/> 
              <arg value="app.${ANDROID_APP_ID}"/> 
      </exec> 
   </target>
 
-  <!--================	Target [install] ==============-->
+  <!--================  Target [install] ==============-->
   <target name="install">
      <exec executable="adb"> 
              <arg value="install"/> 
@@ -283,42 +327,42 @@
   </target>
 
 
-  <!--================	Target [all]  ===================-->
+  <!--================  Target [all]  ===================-->
   <target name="all" 
-	  description="Compile the LZX files and packages the Android APK"
-	  depends="clean">
-	<echo message="DEBUG_FLAG=${DEBUG_FLAG}" />
-	<antcall target="generate-as3">
-	  <param name="debug" value="${DEBUG_FLAG}" />
-	</antcall>
-	<antcall target="copy-to-air-src-folder" />
-	<antcall target="package" />
+      description="Compile the LZX files and packages the Android APK"
+      depends="clean">
+    <echo message="DEBUG_FLAG=${DEBUG_FLAG}" />
+    <antcall target="generate-as3">
+      <param name="debug" value="${DEBUG_FLAG}" />
+    </antcall>
+    <antcall target="copy-to-air-src-folder" />
+    <antcall target="package" />
   </target>
 
-  <!--================	Target [install]  ===================-->
+  <!--================  Target [install]  ===================-->
   <target name="run" 
-	  description="Builds the APK package and installs the app on the device"
-	  depends="all">
- 	<antcall target="uninstall" />
-	<antcall target="install" />
+      description="Builds the APK package and installs the app on the device"
+      depends="all">
+    <antcall target="uninstall" />
+    <antcall target="install" />
   </target>
 
-  <!--================	Helper targets	=================-->
+  <!--================  Helper targets  =================-->
   <!-- Check if the LZX file in ${LZX_FILE} exists --> 
   <target name="lzx.file.check">
-	<condition property="lzx.file.missing">
-	  <not>
-		<available file="${LZX_FILE}" type="file"/>
-	  </not>
-	</condition>
+    <condition property="lzx.file.missing">
+      <not>
+        <available file="${LZX_FILE}" type="file"/>
+      </not>
+    </condition>
   </target>
   <!-- Check if target folder for the generated source code exist. --> 
   <target name="target.folder.check">
-	<condition property="target.folder.missing">
-	  <not>
-		<available file="${SOURCE_DIR}" type="dir"/>
-	  </not>
-	</condition>
+    <condition property="target.folder.missing">
+      <not>
+        <available file="${AS3_SOURCE_DIR}" type="dir"/>
+      </not>
+    </condition>
   </target>
 
 </project>
