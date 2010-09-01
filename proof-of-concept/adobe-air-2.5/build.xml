@@ -136,7 +136,8 @@
     <echo message="Compiling ${TEMP_LZX_DIR}/${file}"/>
     <echo message="arg: ${args} ${TEMP_LZX_DIR}/${file}"/>
     <echo message="Using LPS_HOME: ${LPS_HOME}"/>
-    <java classpathref="laszlo.compiler.classpath" classname="org.openlaszlo.compiler.Main" fork="yes">
+    <java classpathref="laszlo.compiler.classpath" classname="org.openlaszlo.compiler.Main" fork="yes"
+	      failonerror="true">
       <!-- Don't use the default Java temp dir. The generated ActionScript3 files
            will be located in the Java temp folder -->
       <sysproperty key="java.io.tmpdir" value="./temp" />
@@ -301,6 +302,10 @@
           <arg value="-C"/>
           <arg value="${BUILD_DIR}"/>
           <arg value="${LZX_FILE}.swf"/>
+          <!-- resources loaded at runtime using app:/ -->
+          <arg value="-C"/>
+          <arg value="${RUNTIME_RSC_DIR}"/>
+          <arg value="images" />
       </java>
   </target>
 
@@ -314,7 +319,7 @@
   <target name="uninstall"  >
      <exec executable="adb"> 
              <arg value="uninstall"/> 
-             <arg value="app.${ANDROID_APP_ID}"/> 
+             <arg value="air.${ANDROID_APP_ID}"/> 
      </exec> 
   </target>
 
