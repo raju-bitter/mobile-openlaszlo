@@ -1,0 +1,1 @@
+Resources loaded inside the AIR app at runtime should be put into this folder. Currently the build file will only include the content within the images folder in an app, but you can add other folder (video, audio, datasets, etc.) here. To include those files, edit the build.xml file's package target accordingly.
