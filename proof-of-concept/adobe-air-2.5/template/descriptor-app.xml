@@ -1,26 +1,29 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <application xmlns="http://ns.adobe.com/air/application/2.5">
-    <android>
-        <manifestAdditions>
-            <manifest>
-                <data><![CDATA[
+	<id>INSERTED_THROUGH_ANT_BUILD</id>
+	<filename>INSERTED_THROUGH_ANT_BUILD</filename>
+	<name>OpenLaszlo application packaged as an Adobe AIR 2.5 for Android app</name>
+	<copyright>Add your copyright info here</copyright>
+	<versionNumber>1.0.1</versionNumber>
+	<versionLabel>1.0.1</versionLabel>
+	<supportedProfiles>mobileDevice</supportedProfiles>
+	<initialWindow>
+		<content>SWF_FILENAME_INSERTED_THROUGH_ANT_BUILD</content>
+		<visible>true</visible>
+		<fullScreen>true</fullScreen>
+		<aspectRatio>landscape</aspectRatio>		
+		<autoOrients>true</autoOrients>
+		<!--renderMode>gpu</renderMode-->
+    </initialWindow>
+	<android>
+		<manifestAdditions>
+			<manifest>
+				<data><![CDATA[
                 <uses-permission android:name="android.permission.INTERNET"/>
                 <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-                <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+                <uses-permission android:name="android.permission.CAMERA"/>
                 ]]></data>
-            </manifest>
-        </manifestAdditions>
-    </android>
-    <id>org.mobileopenlaszlo.android.air.HelloWorld</id>
-    <filename>INSERTED_THROUGH_ANT_BUILD</filename>
-    <name>OpenLaszlo application packaged as an Adobe AIR 2.5 for Android app</name>
-    <copyright>Add your copyright info here</copyright>
-    <versionNumber>1.0.1</versionNumber>
-    <versionLabel>1.0.1</versionLabel>
-    <supportedProfiles>mobileDevice</supportedProfiles>
-    <initialWindow>
-        <content>SWF_FILENAME_INSERTED_THROUGH_ANT_BUILD</content>
-        <visible>true</visible>
-        <!-- <autoOrients>true</autoOrients> -->
-    </initialWindow>
+			</manifest>
+		</manifestAdditions>
+	</android>
 </application>
