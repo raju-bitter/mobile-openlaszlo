@@ -17,8 +17,6 @@
         
        LZX_FILE=your_file_name_without_path.lzx
        
-       AS3_SOURCE_DIR=/air_project_folder/src
-
        FLEX_HOME=/path/to/your/adobe/flex/sdk/
 
   The environment variable $LPS_HOME must point to a folder containing an
@@ -121,7 +119,7 @@
   <!-- Generate AS3 code out of LZX file: compiles ${file}, using options ${args} -->
   <target name="compile-lzx-file" description="Compiling LZX to ActionScript 3 source code">
     <copy todir="${TEMP_LZX_DIR}/resources">
-      <fileset dir="resources" casesensitive="true">
+      <fileset dir="resources/" casesensitive="true">
         <include name="**/*.jpg" />
         <include name="**/*.png" />
         <include name="**/*.xml" />
@@ -137,7 +135,7 @@
     <echo message="arg: ${args} ${TEMP_LZX_DIR}/${file}"/>
     <echo message="Using LPS_HOME: ${LPS_HOME}"/>
     <java classpathref="laszlo.compiler.classpath" classname="org.openlaszlo.compiler.Main" fork="yes"
-	      failonerror="true">
+        failonerror="true">
       <!-- Don't use the default Java temp dir. The generated ActionScript3 files
            will be located in the Java temp folder -->
       <sysproperty key="java.io.tmpdir" value="./temp" />
@@ -192,7 +190,7 @@
     <!-- Copy correct LFC lib into temp/lib folder -->
     <script language="javascript">
       var lfcFile = "LFC10.swc";
-      if (openlaszloAirTool.getProperty("DEBUG_FLAG") == "true") {
+      if (openlaszloAirTool.getProperty("LZX_DEBUG_FLAG") == "true") {
         lfcFile = "LFC10-debug.swc";
       }
       openlaszloAirTool.setProperty("LFC_FILE", lfcFile);
@@ -216,7 +214,7 @@
         static-rsls="true"
         accessible="true"
         configname="air"
-        debug="${DEBUG_FLAG}"
+        debug="${AIR_DEBUG_FLAG}"
         failonerror="true"
         warnings="false"
         fork="true"
@@ -277,13 +275,61 @@
         <replace path="/:application/:initialWindow/:content/text()" withText="${LZX_FILE}.swf"/>
       </xmltask>
       <script language="javascript">
-        var flag = openlaszloAirTool.getProperty("DEBUG_FLAG");
+        var flag = openlaszloAirTool.getProperty("AIR_DEBUG_FLAG");
         if (flag == "true") {
           openlaszloAirTool.setProperty("APK_TARGET", "apk-debug");
         } else {
           openlaszloAirTool.setProperty("APK_TARGET", "apk");
         }
       </script>
+      <if>
+        <equals arg1="${REMOTE_DEBUG_ACTIVE}" arg2="true" />
+        <then>
+            <antcall target="package-remote-debug">
+                <param name="APK_TARGET" value="${APK_TARGET}" />
+            </antcall>
+        </then>
+        <else>
+            <antcall target="package-no-remote-debug">
+              <param name="APK_TARGET" value="${APK_TARGET}" />
+            </antcall>
+        </else>
+      </if>
+  </target>
+  
+  <target name="package-remote-debug">
+      <echo message="Using ADT target option '-target ${APK_TARGET}'" />
+      <echo message="Remote debug active, using IP ${REMOTE_DEBUG_IP}'" />
+      <java jar="${ADT}" fork="true" 
+          failonerror="true"
+          maxmemory="512m">
+          <arg value="-package"/>
+          <arg value="-target"/>
+          <arg value="${APK_TARGET}"/>
+          <arg value="-connect" />
+          <arg value="${REMOTE_DEBUG_IP}" />
+          <arg value="-storetype"/>
+          <arg value="${STORETYPE}"/>
+          <arg value="-keystore"/>
+          <arg value="${KEYSTORE}"/>
+          <arg value="-storepass"/>
+          <arg value="${CERT_PASSWORD}"/>
+          <arg value="${RELEASE_DIR}/${AIR_FILE}.apk"/>
+          <arg value="${BUILD_DIR}/${LZX_FILE}-app.xml"/>
+          <arg value="-C"/>
+          <arg value="${BUILD_DIR}"/>
+          <arg value="${LZX_FILE}.swf"/>
+          <!-- resources loaded at runtime using app:/ -->
+          <arg value="-C"/>
+          <arg value="${RUNTIME_RSC_DIR}"/>
+          <arg value="images" />
+          <arg value="-C"/>
+          <arg value="${TEMPLATE_FOLDER}"/>
+          <arg value="icons" />
+      </java>
+  </target>
+
+  <target name="package-no-remote-debug">
       <echo message="Using ADT target option '-target ${APK_TARGET}'" />
       <java jar="${ADT}" fork="true" 
           failonerror="true"
@@ -306,6 +352,9 @@
           <arg value="-C"/>
           <arg value="${RUNTIME_RSC_DIR}"/>
           <arg value="images" />
+          <arg value="-C"/>
+          <arg value="${TEMPLATE_FOLDER}"/>
+          <arg value="icons" />
       </java>
   </target>
 
@@ -336,9 +385,9 @@
   <target name="all" 
       description="Compile the LZX files and packages the Android APK"
       depends="clean">
-    <echo message="DEBUG_FLAG=${DEBUG_FLAG}" />
+    <echo message="DEBUG_FLAG=${LZX_DEBUG_FLAG}" />
     <antcall target="generate-as3">
-      <param name="debug" value="${DEBUG_FLAG}" />
+      <param name="debug" value="${LZX_DEBUG_FLAG}" />
     </antcall>
     <antcall target="copy-to-air-src-folder" />
     <antcall target="package" />
@@ -368,6 +417,38 @@
         <available file="${AS3_SOURCE_DIR}" type="dir"/>
       </not>
     </condition>
+  </target>
+
+  <!-- ============================== Flash Builder ============================== -->
+  <target name="flashbuilder-project-update" depends="clean">
+    <antcall target="generate-as3">
+      <param name="debug" value="${LZX_DEBUG_FLAG}" />
+    </antcall>
+    <antcall target="copy-to-air-src-folder" />
+    <antcall target="copy-to-fb-project" />
+    <echo message="Copying AIR app descriptor from ${TEMPLATE_FOLDER}/${AIR_DESC_TEMPLATE} to ${FB_PROJECT_SRC}" />
+    <xmltask source="${TEMPLATE_FOLDER}/${AIR_DESC_TEMPLATE}" dest="${FB_PROJECT_SRC}/LzSpriteApplication-app.xml">
+      <replace path="/:application/:id/text()" withText="${ANDROID_APP_ID}"/>
+      <replace path="/:application/:name/text()" withText="${ANDROID_APP_NAME}"/>
+      <replace path="/:application/:filename/text()" withText="LzSpriteApplication"/>
+      <replace path="/:application/:initialWindow/:content/text()" withText="LzSpriteApplication.swf"/>
+    </xmltask>
+  </target>
+  
+  <target name="copy-to-fb-project">
+    <echo message="Copying ActionScript3 code and resources to ${FB_PROJECT_SRC}" />
+    <copy todir="${FB_PROJECT_SRC}"
+      overwrite="true">
+      <fileset dir="${AS3_SOURCE_DIR}" casesensitive="no">
+        <include name="**/*.as" />
+        <!-- Include image, video, XML dataset and other resource files.
+             Add other file extensions here for your own project -->
+        <include name="**/*.jpg" />
+        <include name="**/*.png" />
+        <include name="**/*.xml" />
+        <include name="**/*.flv" />
+      </fileset>
+    </copy>
   </target>
 
 </project>
